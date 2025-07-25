@@ -72,4 +72,7 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     ksp("com.google.dagger:hilt-compiler:2.57")
 
+    // The compose calendar library for Android
+    implementation("com.kizitonwose.calendar:compose:2.6.2")
+
 }
