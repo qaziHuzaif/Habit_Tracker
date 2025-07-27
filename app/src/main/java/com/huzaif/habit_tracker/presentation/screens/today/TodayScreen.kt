@@ -29,7 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.huzaif.habit_tracker.presentation.common.TopBar
+import com.huzaif.habit_tracker.presentation.navigation.Screen
 import com.huzaif.habit_tracker.presentation.screens.today.component.HomeWeekCalendar
 import com.huzaif.habit_tracker.ui.theme.White
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
@@ -40,7 +42,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun TodayScreen(modifier: Modifier = Modifier) {
+fun TodayScreen(modifier: Modifier, navController: NavHostController) {
     val currentDate: LocalDate = remember { LocalDate.now() }
     var selection: LocalDate by rememberSaveable { mutableStateOf(currentDate) }
     val title by remember {
@@ -60,15 +62,17 @@ fun TodayScreen(modifier: Modifier = Modifier) {
         topBar = { TopBar(title = title) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = {
+                    navController.navigate(Screen.AddHabitScreen.route)
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = White
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Habit")
             }
         },
+//        bottomBar = { AppBottomBar(modifier = Modifier, navController = navController) }
     ) { innerPadding ->
-
         Column(
             modifier = modifier
                 .fillMaxSize()

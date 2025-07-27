@@ -4,9 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import com.huzaif.habit_tracker.presentation.screens.today.TodayScreen
+import androidx.navigation.compose.rememberNavController
+import com.huzaif.habit_tracker.presentation.navigation.AppNavGraph
 import com.huzaif.habit_tracker.ui.theme.Habit_TrackerTheme
 
 class MainActivity : ComponentActivity() {
@@ -14,10 +13,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val navController = rememberNavController()
             Habit_TrackerTheme {
-                Surface {
-                    TodayScreen(modifier = Modifier)
-                }
+                AppNavGraph(navController = navController)
             }
         }
     }
