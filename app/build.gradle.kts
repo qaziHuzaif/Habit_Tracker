@@ -75,4 +75,13 @@ dependencies {
     // The compose calendar library for Android
     implementation("com.kizitonwose.calendar:compose:2.6.2")
 
+    // compose time picker library for Android
+    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.9.0")
+
+//    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.9.2")
+//    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.9.2")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
+//
+
 }

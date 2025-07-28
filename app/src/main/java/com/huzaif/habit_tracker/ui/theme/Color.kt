@@ -10,5 +10,6 @@ val DarkPrimary = Color(0xFFE23D55)
 val DarkSecondary = Color(0xFF262A48)
 val DarkTertiary = Color(0xFFFF5722)
 
-val Black = Color(0xFF010204)
+//val Black = Color(0xFF010204)
+val Black = Color(0xFF151618)
 val White = Color(0xFFFFFFFF)
