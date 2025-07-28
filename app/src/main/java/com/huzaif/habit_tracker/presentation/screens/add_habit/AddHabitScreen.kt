@@ -282,38 +282,38 @@ fun AddHabitScreen(modifier: Modifier = Modifier, navController: NavHostControll
                                 .clickable { timeDialogState.show() }
                         )
                     }
-                }
 
-                MaterialDialog(
-                    dialogState = timeDialogState,
-                    buttons = {
-                        positiveButton(
-                            text = "Ok",
-                            textStyle = TextStyle(color = MaterialTheme.colorScheme.primary)
-                        )
-                        negativeButton(
-                            text = "Cancel",
-                            textStyle = TextStyle(color = MaterialTheme.colorScheme.primary)
-                        )
-                    },
-                    backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                ) {
-                    timepicker(
-                        title = "Pick a time",
-                        colors = TimePickerDefaults.colors(
-                            activeBackgroundColor = MaterialTheme.colorScheme.primary,
-                            activeTextColor = MaterialTheme.colorScheme.onBackground,
-                            inactiveTextColor = MaterialTheme.colorScheme.onBackground,
-                            selectorColor = MaterialTheme.colorScheme.primary,
-                            selectorTextColor = MaterialTheme.colorScheme.onBackground,
-                            headerTextColor = MaterialTheme.colorScheme.onBackground,
-                        )
+                    MaterialDialog(
+                        dialogState = timeDialogState,
+                        buttons = {
+                            positiveButton(
+                                text = "Ok",
+                                textStyle = TextStyle(color = MaterialTheme.colorScheme.primary)
+                            )
+                            negativeButton(
+                                text = "Cancel",
+                                textStyle = TextStyle(color = MaterialTheme.colorScheme.primary)
+                            )
+                        },
+                        backgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh
                     ) {
-                        reminder = it
+                        timepicker(
+                            title = "Pick a time",
+                            colors = TimePickerDefaults.colors(
+                                activeBackgroundColor = MaterialTheme.colorScheme.primary,
+                                activeTextColor = MaterialTheme.colorScheme.onBackground,
+                                inactiveTextColor = MaterialTheme.colorScheme.onBackground,
+                                selectorColor = MaterialTheme.colorScheme.primary,
+                                selectorTextColor = MaterialTheme.colorScheme.onBackground,
+                                headerTextColor = MaterialTheme.colorScheme.onBackground,
+                            )
+                        ) {
+                            reminder = it
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -360,7 +360,7 @@ private fun ActionHandler(navController: NavHostController, isError: Boolean) {
     ) {
         Button(
             onClick = {
-                    navController.navigateUp()
+                navController.navigateUp()
             },
         ) {
             Text(

@@ -10,6 +10,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +19,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,9 +32,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.huzaif.habit_tracker.presentation.common.TopBar
 import com.huzaif.habit_tracker.presentation.navigation.Screen
+import com.huzaif.habit_tracker.presentation.screens.today.component.DayHabitElement
 import com.huzaif.habit_tracker.presentation.screens.today.component.HomeWeekCalendar
 import com.huzaif.habit_tracker.ui.theme.White
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
@@ -43,6 +48,9 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun TodayScreen(modifier: Modifier, navController: NavHostController) {
+    val viewModel: TodayScreenViewModel = hiltViewModel()
+    val todayHabits by viewModel.todayHabits.collectAsState()
+
     val currentDate: LocalDate = remember { LocalDate.now() }
     var selection: LocalDate by rememberSaveable { mutableStateOf(currentDate) }
     val title by remember {
@@ -89,15 +97,21 @@ fun TodayScreen(modifier: Modifier, navController: NavHostController) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-//                    .background(MaterialTheme.colorScheme.secondary)
                     .heightIn(min = 500.dp),
-                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = title,
-                    textAlign = TextAlign.Center,
-                    fontSize = 50.sp
-                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    items(todayHabits) { habit ->
+                        DayHabitElement(
+                            habit = habit,
+                            isDisabled = selection > currentDate
+                        )
+                    }
+                }
+
+                // scroll to current date
                 if (selection != currentDate) {
                     TextButton(
                         onClick = {
