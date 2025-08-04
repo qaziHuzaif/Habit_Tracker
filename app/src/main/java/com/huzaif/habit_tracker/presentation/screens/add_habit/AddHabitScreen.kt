@@ -1,7 +1,6 @@
 package com.huzaif.habit_tracker.presentation.screens.add_habit
 
 import android.os.Build
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -41,16 +41,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
+import com.huzaif.habit_tracker.data.model.HabitEntity
 import com.huzaif.habit_tracker.presentation.common.TopBar
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
@@ -65,19 +64,33 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddHabitScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostController, id: Long) {
+    val viewModel: AddHabitScreenViewModel = hiltViewModel()
 
     var habitName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
-    val dateFormatter = DateTimeFormatter.ofPattern("d/MM/y")
-    val timeFormatter = DateTimeFormatter.ofPattern("h:m a")
     var startDate by remember { mutableStateOf(LocalDate.now()) }
-    var endDate by remember { mutableStateOf(LocalDate.now().plusWeeks(2)) }
     var useEndDate by remember { mutableStateOf(false) }
+    var endDate by remember { mutableStateOf(LocalDate.now().plusWeeks(2)) }
     var setReminder by remember { mutableStateOf(false) }
-    var reminder by remember { mutableStateOf<LocalTime?>(LocalTime.now()) }
+    var reminder by remember { mutableStateOf(LocalTime.now()) }
     var priority by remember { mutableIntStateOf(1) }
 
+    if (id != 0L) {
+        viewModel.getHabitById(id)
+        val habitDetails by viewModel.habitDetail.collectAsState()
+        habitName = habitDetails.name
+        description = habitDetails.description ?: ""
+        startDate = LocalDate.ofEpochDay(habitDetails.startDateEpochDay)
+        useEndDate = habitDetails.endDateEpochDay != null
+        habitDetails.endDateEpochDay?.let { endDate = LocalDate.ofEpochDay(it) }
+        setReminder = habitDetails.timeAndReminder != null
+        habitDetails.timeAndReminder?.let { reminder = LocalTime.ofNanoOfDay(it) }
+        priority = habitDetails.priority
+    }
+
+    val dateFormatter = DateTimeFormatter.ofPattern("dd/MM/y")
+    val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     val timeDialogState = rememberMaterialDialogState()
@@ -323,7 +336,9 @@ fun AddHabitScreen(modifier: Modifier = Modifier, navController: NavHostControll
                     Text("Priority: ", fontSize = 16.sp)
                     OutlinedTextField(
                         value = priority.toString(),
-                        onValueChange = { priority = it.toInt() },
+                        onValueChange = {
+                            priority = it.filter { char -> char.isDigit() }.toIntOrNull() ?: 1
+                        },
                         singleLine = true,
                         textStyle = TextStyle().copy(textAlign = TextAlign.Center),
                         colors = TextFieldDefaults.colors().copy(
@@ -338,19 +353,54 @@ fun AddHabitScreen(modifier: Modifier = Modifier, navController: NavHostControll
                             .wrapContentHeight()
                             .widthIn(max = 80.dp)
                     )
+
                 }
 
             }
 
-            ActionHandler(navController, startDate > endDate || habitName.isBlank())
+            ActionHandler(navController, (if(useEndDate) startDate > endDate else false) || habitName.isBlank()) {
+                if (id != 0L) {
+                    viewModel.editHabit(
+                        HabitEntity(
+                            id = id,
+                            name = habitName,
+                            description = description.ifBlank { null },
+                            startDateEpochDay = startDate.toEpochDay(),
+                            endDateEpochDay = if (useEndDate) endDate.toEpochDay() else null,
+                            priority = priority,
+                            timeAndReminder = if (setReminder) reminder.toNanoOfDay() else null
+                        )
+                    )
+                } else {
+                    viewModel.addHabit(
+                        HabitEntity(
+                            id = id,
+                            name = habitName,
+                            description = description.ifBlank { null },
+                            startDateEpochDay = startDate.toEpochDay(),
+                            endDateEpochDay = if (useEndDate) endDate.toEpochDay() else null,
+                            priority = priority,
+                            timeAndReminder = if (setReminder && reminder != null) {
+                                reminder.toNanoOfDay()
+                            } else {
+                                null
+                            }
+                        )
+                    )
+                }
+                navController.navigateUp()
+            }
         }
     }
 }
 
 
 @Composable
-private fun ActionHandler(navController: NavHostController, isError: Boolean) {
-    val context = LocalContext.current
+private fun ActionHandler(
+    navController: NavHostController,
+    isError: Boolean,
+    onSave: () -> Boolean
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -369,17 +419,8 @@ private fun ActionHandler(navController: NavHostController, isError: Boolean) {
             )
         }
         Button(
-            onClick = {
-                if (isError) {
-                    Toast.makeText(
-                        context,
-                        "Start date can not be greater than end date",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    navController.navigateUp()
-                }
-            },
+            onClick = { onSave() },
+            enabled = !isError
         ) {
             Text(
                 text = "Save",
@@ -412,17 +453,9 @@ private fun InputTextBox(
             unfocusedContainerColor = MaterialTheme.colorScheme.background,
         ),
         keyboardOptions = KeyboardOptions.Default.copy(
-//            imeAction = ImeAction.Next,
             capitalization = KeyboardCapitalization.Sentences
         ),
         modifier = Modifier.fillMaxWidth(),
         isError = input.isEmpty() && input.isNotBlank()
     )
-}
-
-
-@Preview
-@Composable
-private fun PreviewAddHabitScreen() {
-    AddHabitScreen(navController = rememberNavController())
 }
