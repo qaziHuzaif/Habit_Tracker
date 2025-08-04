@@ -41,16 +41,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.huzaif.habit_tracker.data.model.HabitEntity
 import com.huzaif.habit_tracker.presentation.common.TopBar
+import com.huzaif.habit_tracker.presentation.screens.add_habit.alarm_manager.setUpPeriodicAlarm
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
@@ -61,11 +64,13 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostController, id: Long) {
     val viewModel: AddHabitScreenViewModel = hiltViewModel()
+    val context = LocalContext.current
 
     var habitName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -381,6 +386,19 @@ fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostCont
                             endDateEpochDay = if (useEndDate) endDate.toEpochDay() else null,
                             priority = priority,
                             timeAndReminder = if (setReminder && reminder != null) {
+                                val calendar = Calendar.getInstance().apply {
+                                    timeInMillis = System.currentTimeMillis()
+                                    set(Calendar.HOUR_OF_DAY, reminder.hour)
+                                    set(Calendar.MINUTE, reminder.minute)
+                                    set(Calendar.SECOND, 0)
+                                    set(Calendar.MILLISECOND, 0)
+
+                                    // If time has already passed today, schedule for tomorrow
+                                    if (before(Calendar.getInstance())) {
+                                        add(Calendar.DAY_OF_YEAR, 1)
+                                    }
+                                }
+                                setUpPeriodicAlarm(context, calendar.timeInMillis, habitName)
                                 reminder.toNanoOfDay()
                             } else {
                                 null
@@ -458,4 +476,11 @@ private fun InputTextBox(
         modifier = Modifier.fillMaxWidth(),
         isError = input.isEmpty() && input.isNotBlank()
     )
+}
+
+
+@Preview
+@Composable
+private fun PreviewAddHabitScreen() {
+//    AddEditHabitScreen(navController = rememberNavController(), id = 0)
 }
