@@ -26,7 +26,12 @@ import androidx.compose.ui.unit.dp
 import com.huzaif.habit_tracker.presentation.screens.today.DayHabit
 
 @Composable
-fun DayHabitElement(modifier: Modifier = Modifier, habit: DayHabit, isDisabled: Boolean) {
+fun DayHabitElement(
+    modifier: Modifier = Modifier,
+    habit: DayHabit,
+    isDisabled: Boolean,
+    onClick: () -> Unit
+) {
     Column {
         Row(
             modifier = modifier
@@ -34,6 +39,7 @@ fun DayHabitElement(modifier: Modifier = Modifier, habit: DayHabit, isDisabled: 
                     enabled = !isDisabled
                 ) {
                     // Handle habit click
+                    onClick()
                 }
                 .fillMaxWidth()
                 .padding(16.dp),
@@ -86,8 +92,11 @@ fun CustomCheckBox(habit: DayHabit) {
 @Composable
 fun DayHabitElementPreview() {
     DayHabitElement(
-        habit = DayHabit(name = "Morning Run", isCompleted = true),
-        isDisabled = false
+        habit = DayHabit(id = 0, name = "Morning Run", isCompleted = true),
+        isDisabled = false,
+        onClick = {
+
+        }
     )
 }
 
