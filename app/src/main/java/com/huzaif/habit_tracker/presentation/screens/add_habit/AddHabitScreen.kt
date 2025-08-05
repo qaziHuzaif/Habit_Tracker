@@ -1,6 +1,7 @@
 package com.huzaif.habit_tracker.presentation.screens.add_habit
 
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -38,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,18 +48,19 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.huzaif.habit_tracker.data.model.HabitEntity
 import com.huzaif.habit_tracker.presentation.common.TopBar
-import com.huzaif.habit_tracker.presentation.screens.add_habit.alarm_manager.setUpPeriodicAlarm
+import com.huzaif.habit_tracker.presentation.screens.add_habit.alarm_manager.cancelPeriodicReminder
+import com.huzaif.habit_tracker.presentation.screens.add_habit.alarm_manager.setUpPeriodicReminder
 import com.vanpra.composematerialdialogs.MaterialDialog
 import com.vanpra.composematerialdialogs.datetime.time.TimePickerDefaults
 import com.vanpra.composematerialdialogs.datetime.time.timepicker
 import com.vanpra.composematerialdialogs.rememberMaterialDialogState
+import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
@@ -71,6 +74,7 @@ import java.util.Calendar
 fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostController, id: Long) {
     val viewModel: AddHabitScreenViewModel = hiltViewModel()
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
     var habitName by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -363,21 +367,13 @@ fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostCont
 
             }
 
-            ActionHandler(navController, (if(useEndDate) startDate > endDate else false) || habitName.isBlank()) {
+            ActionHandler(
+                navController,
+                (if (useEndDate) startDate > endDate else false) || habitName.isBlank()
+            ) {
                 if (id != 0L) {
+                    // for editing previous habit
                     viewModel.editHabit(
-                        HabitEntity(
-                            id = id,
-                            name = habitName,
-                            description = description.ifBlank { null },
-                            startDateEpochDay = startDate.toEpochDay(),
-                            endDateEpochDay = if (useEndDate) endDate.toEpochDay() else null,
-                            priority = priority,
-                            timeAndReminder = if (setReminder) reminder.toNanoOfDay() else null
-                        )
-                    )
-                } else {
-                    viewModel.addHabit(
                         HabitEntity(
                             id = id,
                             name = habitName,
@@ -398,13 +394,64 @@ fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostCont
                                         add(Calendar.DAY_OF_YEAR, 1)
                                     }
                                 }
-                                setUpPeriodicAlarm(context, calendar.timeInMillis, habitName)
+                                // cancel previous alarm and set new one
+                                cancelPeriodicReminder(context, habitName, id)
+                                // set new alarm
+                                setUpPeriodicReminder(context, calendar.timeInMillis, habitName, id)
                                 reminder.toNanoOfDay()
                             } else {
+                                cancelPeriodicReminder(context, habitName, id)
                                 null
                             }
                         )
                     )
+                } else {
+                    // for adding new habit
+                    coroutineScope.launch {
+                        val code = viewModel.addHabit(
+                            HabitEntity(
+                                id = id,
+                                name = habitName,
+                                description = description.ifBlank { null },
+                                startDateEpochDay = startDate.toEpochDay(),
+                                endDateEpochDay = if (useEndDate) endDate.toEpochDay() else null,
+                                priority = priority,
+                                timeAndReminder = if (setReminder && reminder != null) {
+                                    reminder.toNanoOfDay()
+                                } else {
+                                    null
+                                }
+                            )
+                        )
+                        if (setReminder && reminder != null) {
+                            if (code != 0L) {
+                                val calendar = Calendar.getInstance().apply {
+                                    timeInMillis = System.currentTimeMillis()
+                                    set(Calendar.HOUR_OF_DAY, reminder.hour)
+                                    set(Calendar.MINUTE, reminder.minute)
+                                    set(Calendar.SECOND, 0)
+                                    set(Calendar.MILLISECOND, 0)
+
+                                    // If time has already passed today, schedule for tomorrow
+                                    if (before(Calendar.getInstance())) {
+                                        add(Calendar.DAY_OF_YEAR, 1)
+                                    }
+                                }
+                                setUpPeriodicReminder(
+                                    context,
+                                    calendar.timeInMillis,
+                                    habitName,
+                                    code
+                                )
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Failed to add reminder",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    }
                 }
                 navController.navigateUp()
             }
@@ -476,11 +523,4 @@ private fun InputTextBox(
         modifier = Modifier.fillMaxWidth(),
         isError = input.isEmpty() && input.isNotBlank()
     )
-}
-
-
-@Preview
-@Composable
-private fun PreviewAddHabitScreen() {
-//    AddEditHabitScreen(navController = rememberNavController(), id = 0)
 }

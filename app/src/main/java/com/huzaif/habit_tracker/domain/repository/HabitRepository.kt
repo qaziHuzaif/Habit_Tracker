@@ -7,7 +7,7 @@ import com.huzaif.habit_tracker.data.model.HabitEntity
 import kotlinx.coroutines.flow.Flow
 
 interface HabitRepository {
-    suspend fun addHabit(habit: HabitEntity)
+    suspend fun addHabit(habit: HabitEntity): Long
     suspend fun editHabit(habit: HabitEntity)
     suspend fun markHabitCompletion(completion: CompletionEntity)
 

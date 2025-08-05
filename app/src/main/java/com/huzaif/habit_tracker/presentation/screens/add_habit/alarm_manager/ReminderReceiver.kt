@@ -14,8 +14,8 @@ import androidx.core.content.ContextCompat
 import com.huzaif.habit_tracker.MainActivity
 import com.huzaif.habit_tracker.R
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.Calendar
-import java.util.Date
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 private const val CHANNEL = "Habit"
 
@@ -23,15 +23,15 @@ private const val CHANNEL = "Habit"
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
 
-        val currentTime = System.currentTimeMillis()
-        val longToDateTime: Date = Date(currentTime)
-        val reminderTime = intent?.getLongExtra("Time", 0L) ?: 0L
-        val title = intent?.getStringExtra("Name") ?: "NA"
+        val title = intent?.getStringExtra("habitName") ?: "Notification"
+        val id = intent?.getLongExtra("habitId", 0) ?: 0
 
-        val interval = 24 * 60 * 60 * 1000
-
-//        Log.d("Worker", "Reminder Receiver: started at (T- $id name- $title at ${System.currentTimeMillis()} ie. $longToDateTime)")
-        Log.d("Worker", "Reminder Receiver: --alarm set for $title triggered at ${Date(Calendar.getInstance().timeInMillis)} \n\t next trigger at ${Date(Calendar.getInstance().timeInMillis + interval)} ")
+        Log.d(
+            "Worker",
+            "Reminder Receiver: --alarm set for $title triggered at ${
+                LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"))
+            }"
+        )
 
         if (ContextCompat.checkSelfPermission(
                 context!!,
@@ -53,19 +53,19 @@ class ReminderReceiver : BroadcastReceiver() {
             val reminderIntent = Intent(context, MainActivity::class.java)
             val reminderPendingIntent = PendingIntent.getActivity(
                 context,
-                reminderTime.toInt(),
+                id.toInt(),
                 reminderIntent,
                 PendingIntent.FLAG_IMMUTABLE
             )
 
             val reminderNotification = Notification.Builder(context, CHANNEL)
                 .setContentTitle(title)
-                .setContentText("(now - ${longToDateTime}, for - ${Date(reminderTime)})")
+                .setContentText("Time to complete the habit!")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(reminderPendingIntent)
                 .build()
 
-            notificationManager?.notify(reminderTime.toInt(), reminderNotification)
+            notificationManager?.notify(id.toInt(), reminderNotification)
 
         }
     }

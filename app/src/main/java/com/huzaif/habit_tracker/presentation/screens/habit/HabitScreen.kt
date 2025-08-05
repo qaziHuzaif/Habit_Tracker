@@ -11,10 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.huzaif.habit_tracker.presentation.common.TopBar
 import com.huzaif.habit_tracker.presentation.navigation.Screen
+import com.huzaif.habit_tracker.presentation.screens.add_habit.alarm_manager.cancelPeriodicReminder
 import com.huzaif.habit_tracker.presentation.screens.habit.component.HabitCard
 import com.kizitonwose.calendar.compose.weekcalendar.WeekCalendarState
 import com.kizitonwose.calendar.compose.weekcalendar.rememberWeekCalendarState
@@ -24,6 +26,7 @@ import java.time.LocalDate
 fun HabitScreen(modifier: Modifier = Modifier, navController: NavHostController) {
     val viewModel: HabitScreenViewModel = hiltViewModel()
     val habits by viewModel.habits.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         topBar = { TopBar(title = "Habit") }
@@ -55,7 +58,10 @@ fun HabitScreen(modifier: Modifier = Modifier, navController: NavHostController)
                         habit = habit,
                         onEditClick = { navController.navigate(Screen.AddHabitScreen.route + "/${habit.habit.id}") },
                         onResetClick = { viewModel.resetHabit(habit.habit.id) },
-                        onDeleteClick = { viewModel.deleteHabit(habit.habit) }
+                        onDeleteClick = {
+                            cancelPeriodicReminder(context, habit.habit.name, habit.habit.id)
+                            viewModel.deleteHabit(habit.habit)
+                        }
                     ) { date ->
                         val status = habit.completions.find { it.epochDay == date.toEpochDay() }
                         val completionStatus: Boolean =

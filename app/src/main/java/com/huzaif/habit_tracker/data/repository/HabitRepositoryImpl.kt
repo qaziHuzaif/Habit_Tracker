@@ -12,8 +12,8 @@ import javax.inject.Inject
 class HabitRepositoryImpl @Inject constructor(
     private val habitDao: HabitDAO
 ) : HabitRepository {
-    override suspend fun addHabit(habit: HabitEntity) {
-        habitDao.upsertHabit(habit)
+    override suspend fun addHabit(habit: HabitEntity): Long {
+        return habitDao.upsertHabit(habit)
     }
 
     override suspend fun editHabit(habit: HabitEntity) {
