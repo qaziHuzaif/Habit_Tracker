@@ -1,10 +1,12 @@
 package com.huzaif.habit_tracker.presentation.screens.add_habit
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huzaif.habit_tracker.data.model.HabitEntity
 import com.huzaif.habit_tracker.domain.repository.HabitRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -28,10 +30,13 @@ class AddHabitScreenViewModel @Inject constructor(
     val habitDetail = _habits
 
 
-    fun addHabit(habit: HabitEntity) {
-        viewModelScope.launch {
-            habitRepository.addHabit(habit)
-        }
+    suspend fun addHabit(habit: HabitEntity): Long {
+        var id = 0L
+        viewModelScope.async {
+            id = habitRepository.addHabit(habit)
+            Log.d("Worker", "addHabit: $id")
+        }.await()
+        return id
     }
 
     fun editHabit(habit: HabitEntity) {

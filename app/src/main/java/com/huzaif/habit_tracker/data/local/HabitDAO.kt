@@ -17,7 +17,7 @@ interface HabitDAO {
 
     // 1. Insert or Edit a habit
     @Upsert
-    suspend fun upsertHabit(habit: HabitEntity)
+    suspend fun upsertHabit(habit: HabitEntity): Long
 
     // 2. Edit a habit
     @Transaction
@@ -60,14 +60,16 @@ interface HabitDAO {
 
     // 3. Get all habits on a specific date along with their completion status
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT h.*, c.isComplete 
         FROM habits AS h
         LEFT JOIN completions AS c
         ON h.id = c.habitId AND c.epochDay = :epochDay
         WHERE h.startDateEpochDay <= :epochDay 
         AND (h.endDateEpochDay IS NULL OR h.endDateEpochDay >= :epochDay)
-    """)
+        """
+    )
     fun getHabitsWithCompletionOnDate(epochDay: Long): Flow<List<HabitWithCompletionOnDate>>
 
 
