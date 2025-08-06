@@ -14,6 +14,7 @@ import androidx.core.content.ContextCompat
 import com.huzaif.habit_tracker.MainActivity
 import com.huzaif.habit_tracker.R
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
@@ -25,6 +26,7 @@ class ReminderReceiver : BroadcastReceiver() {
 
         val title = intent?.getStringExtra("habitName") ?: "Notification"
         val id = intent?.getLongExtra("habitId", 0) ?: 0
+        val endDate: Long? = intent?.getLongExtra("endDate", 0)
 
         Log.d(
             "Worker",
@@ -67,6 +69,11 @@ class ReminderReceiver : BroadcastReceiver() {
 
             notificationManager?.notify(id.toInt(), reminderNotification)
 
+        }
+
+        // remove reminder if end date is reached
+        if (endDate!=null && endDate!=0L && endDate <= LocalDate.now().toEpochDay()){
+            cancelPeriodicReminder(context, title, id)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.huzaif.habit_tracker.presentation.screens.add_habit
 
 import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -381,28 +382,49 @@ fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostCont
                             startDateEpochDay = startDate.toEpochDay(),
                             endDateEpochDay = if (useEndDate) endDate.toEpochDay() else null,
                             priority = priority,
-                            timeAndReminder = if (setReminder && reminder != null) {
-                                val calendar = Calendar.getInstance().apply {
-                                    timeInMillis = System.currentTimeMillis()
-                                    set(Calendar.HOUR_OF_DAY, reminder.hour)
-                                    set(Calendar.MINUTE, reminder.minute)
-                                    set(Calendar.SECOND, 0)
-                                    set(Calendar.MILLISECOND, 0)
+                            timeAndReminder =
+                                if (setReminder && reminder != null) {
+                                    val calendar = Calendar.getInstance().apply {
+                                        timeInMillis = System.currentTimeMillis()
+                                        set(Calendar.HOUR_OF_DAY, reminder.hour)
+                                        set(Calendar.MINUTE, reminder.minute)
+                                        set(Calendar.SECOND, 0)
+                                        set(Calendar.MILLISECOND, 0)
 
-                                    // If time has already passed today, schedule for tomorrow
-                                    if (before(Calendar.getInstance())) {
-                                        add(Calendar.DAY_OF_YEAR, 1)
+                                        // If time has already passed today, schedule for tomorrow
+                                        if (before(Calendar.getInstance())) {
+                                            add(Calendar.DAY_OF_YEAR, 1)
+                                        }
                                     }
+                                    // cancel previous alarm and set new one
+                                    cancelPeriodicReminder(context, habitName, id)
+                                    // set new alarm if end date is not set or end date is not reached
+                                    val endDateCalendar = Calendar.getInstance().apply {
+                                        timeInMillis = System.currentTimeMillis()
+                                        set(
+                                            endDate.year,
+                                            endDate.month.value - 1,
+                                            endDate.dayOfMonth
+                                        )
+                                        set(Calendar.HOUR_OF_DAY, reminder.hour)
+                                        set(Calendar.MINUTE, reminder.minute)
+                                        set(Calendar.SECOND, 0)
+                                        set(Calendar.MILLISECOND, 0)
+                                    }
+                                    if (!useEndDate || calendar.timeInMillis <= endDateCalendar.timeInMillis) {
+                                        setUpPeriodicReminder(
+                                            context,
+                                            calendar.timeInMillis,
+                                            habitName,
+                                            id,
+                                            if (useEndDate) endDate.toEpochDay() else null
+                                        )
+                                    }
+                                    reminder.toNanoOfDay()
+                                } else {
+                                    cancelPeriodicReminder(context, habitName, id)
+                                    null
                                 }
-                                // cancel previous alarm and set new one
-                                cancelPeriodicReminder(context, habitName, id)
-                                // set new alarm
-                                setUpPeriodicReminder(context, calendar.timeInMillis, habitName, id)
-                                reminder.toNanoOfDay()
-                            } else {
-                                cancelPeriodicReminder(context, habitName, id)
-                                null
-                            }
                         )
                     )
                 } else {
@@ -437,12 +459,25 @@ fun AddEditHabitScreen(modifier: Modifier = Modifier, navController: NavHostCont
                                         add(Calendar.DAY_OF_YEAR, 1)
                                     }
                                 }
-                                setUpPeriodicReminder(
-                                    context,
-                                    calendar.timeInMillis,
-                                    habitName,
-                                    code
-                                )
+                                val endDateCalendar = Calendar.getInstance().apply {
+                                    timeInMillis = System.currentTimeMillis()
+                                    set(endDate.year, endDate.monthValue - 1, endDate.dayOfMonth)
+                                    set(Calendar.HOUR_OF_DAY, reminder.hour)
+                                    set(Calendar.MINUTE, reminder.minute)
+                                    set(Calendar.SECOND, 0)
+                                    set(Calendar.MILLISECOND, 0)
+                                }
+                                // set alarm if end date is not set or end date is not reached
+                                if (!useEndDate || calendar.timeInMillis <= endDateCalendar.timeInMillis) {
+                                    Log.d("Worker", "AddEditHabitScreen: inside if")
+                                    setUpPeriodicReminder(
+                                        context,
+                                        calendar.timeInMillis,
+                                        habitName,
+                                        code,
+                                        if (useEndDate) endDate.toEpochDay() else null
+                                    )
+                                }
                             } else {
                                 Toast.makeText(
                                     context,

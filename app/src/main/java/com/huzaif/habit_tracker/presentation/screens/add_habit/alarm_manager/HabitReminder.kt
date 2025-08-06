@@ -6,14 +6,20 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import java.util.Calendar
 import java.util.Date
 
-fun setUpPeriodicReminder(context: Context, reminder: Long, habitName: String, habitId: Long) {
+fun setUpPeriodicReminder(
+    context: Context,
+    reminder: Long,
+    habitName: String,
+    habitId: Long,
+    endDate: Long?
+) {
 
     val intent = Intent(context, ReminderReceiver::class.java).apply {
         putExtra("habitName", habitName)
         putExtra("habitId", habitId)
+        putExtra("endDate", endDate)
     }
 
     val pendingIntent = PendingIntent.getBroadcast(
@@ -24,7 +30,7 @@ fun setUpPeriodicReminder(context: Context, reminder: Long, habitName: String, h
     val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
     Log.d(
         "Worker",
-        "Periodic Alarm: --$alarmManager--alarm set for $habitName at ${Date(Calendar.getInstance().timeInMillis)} - for time - ${
+        "Periodic Alarm: --$alarmManager--alarm set for $habitName for time - ${
             Date(reminder)
         }"
     )
