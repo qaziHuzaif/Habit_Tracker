@@ -1,5 +1,7 @@
 package com.huzaif.habit_tracker.presentation.screens.settings
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,6 +24,7 @@ import com.huzaif.habit_tracker.presentation.screens.settings.component.Settings
 
 @Composable
 fun SettingsScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+    val context = LocalContext.current
     Scaffold(
         topBar = { TopBar(title = "Settings") },
     ) { innerPadding ->
@@ -34,7 +38,12 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
             )
             // General App Settings
             SettingsOptionCard(modifier = modifier, settingsOptionName = "Appearance")
-            SettingsOptionCard(modifier = modifier, settingsOptionName = "Notifications")
+            SettingsOptionCard(modifier = modifier, settingsOptionName = "Notifications"){
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                }
+                context.startActivity(intent)
+            }
 
             //  Privacy & Security
             SettingsOptionCard(modifier = modifier, settingsOptionName = "Privacy Policy")
@@ -60,9 +69,6 @@ fun SettingsScreen(modifier: Modifier = Modifier, navController: NavHostControll
 
     }
 }
-
-
-
 
 @Preview(showBackground = true, backgroundColor = 0xFF000000)
 @Composable
