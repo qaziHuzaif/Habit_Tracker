@@ -65,6 +65,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 .setContentText("Time to complete the habit!")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(reminderPendingIntent)
+                .setAutoCancel(true)
                 .build()
 
             notificationManager?.notify(id.toInt(), reminderNotification)
