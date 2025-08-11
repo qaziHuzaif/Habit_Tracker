@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
 
             Habit_TrackerTheme {
                 // Show AlertDialog only if showDialog is true
-                RequestAlowBackgroundActivityPermission(showDialog)
+                RequestAllowBackgroundActivityPermission(showDialog)
 
 
                 val navController = rememberNavController()
@@ -67,7 +67,7 @@ class MainActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun RequestAlowBackgroundActivityPermission(showDialog: MutableState<Boolean>) {
+    private fun RequestAllowBackgroundActivityPermission(showDialog: MutableState<Boolean>) {
         if (showDialog.value) {
             AlertDialog(
                 onDismissRequest = {
