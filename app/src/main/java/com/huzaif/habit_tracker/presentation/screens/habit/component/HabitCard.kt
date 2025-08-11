@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huzaif.habit_tracker.data.local.HabitWithCompletions
+import com.huzaif.habit_tracker.presentation.common.CustomAlertDialog
 import com.kizitonwose.calendar.compose.weekcalendar.WeekCalendarState
 import java.time.LocalDate
 
@@ -37,6 +38,8 @@ fun HabitCard(
     onDateClick: (LocalDate) -> Unit,
 ) {
     val openBottomSheet = remember { mutableStateOf(false) }
+    val showDeleteDialog = remember { mutableStateOf(false) }
+    val showResetProgressDialog = remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -86,13 +89,36 @@ fun HabitCard(
                 openBottomSheet.value = false
             },
             onResetClick = {
-                onResetClick()
+                showResetProgressDialog.value = true
                 openBottomSheet.value = false
             },
             onDeleteClick = {
-                onDeleteClick()
+                showDeleteDialog.value = true
                 openBottomSheet.value = false
             }
+        )
+    }
+
+    if (showDeleteDialog.value) {
+        CustomAlertDialog(
+            showDialog = true,
+            onDismiss = { showDeleteDialog.value = false },
+            title = "Delete ${habit.habit.name}",
+            text = "Are you sure you want to delete this habit?",
+            confirmationText = "Delete",
+            onConfirmation = { onDeleteClick(); showDeleteDialog.value = false },
+            dismissText = "Cancel"
+        )
+    }
+    if (showResetProgressDialog.value) {
+        CustomAlertDialog(
+            showDialog = true,
+            onDismiss = { showResetProgressDialog.value = false },
+            title = "Reset Progress",
+            text = "Are you sure you want to reset the progress of habit \"${habit.habit.name}\"?",
+            confirmationText = "Reset",
+            onConfirmation = { onResetClick(); showResetProgressDialog.value = false },
+            dismissText = "Cancel"
         )
     }
 }
